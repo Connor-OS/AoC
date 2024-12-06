@@ -1,10 +1,9 @@
+from utils.input_handling import read_grid
+
 TEST = False
 in_file = "./resources/day_4_test.txt" if TEST else "./resources/day_4.txt"
 
-with open(in_file) as file:
-    grid = {(x, y): char for y, row in enumerate(file)
-            for x, char in enumerate(row.strip("\n"))}
-
+grid = read_grid(in_file)
 
 def valid_xmas(x, y):
     MAS = ["M", "A", "S"]

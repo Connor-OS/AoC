@@ -1,55 +1,11 @@
+import time
+
 file_path = "./resources/day_16.txt"
 
 from copy import deepcopy as copy
-# from functools import cache
-#
-# @cache # dist is not hashable
-def best_path(network: dict, cursor: str, t: int, dist: int):
-    '''
-    Function to recursively explore all potential paths in the network
-    :param network:
-    :param cursor:
-    :param t:
-    :param dist:
-    :return: maximum scoring path
-    '''
-    if t <= 0 or len(network) == 0:
-        return 0
+from functools import cache
 
-    # decrement time
-    t -= dist
-
-    # calculate score
-    score = network[cursor]["reward"] * t
-
-    t -= 1
-
-    neighbours = network[cursor]["neighbours"]
-    distances = network[cursor]["distances"]
-
-    # Remove cursor from network
-    updated_network = remove_node(copy(network), cursor)
-
-    # iterate through neighbours calling function on reduced network
-    score += max([best_path(updated_network, n, t, d) for n, d in zip(neighbours, distances)] + [0])
-
-    len(network)
-    return score
-
-
-def remove_node(network: dict, cursor: str) -> dict:
-    network.pop(cursor)
-    for node in network:
-        try:
-            (network[node]["neighbours"],
-             network[node]["distances"]) = (
-                zip(*[(n, d) for n, d in zip(
-                    network[node]["neighbours"],
-                    network[node]["distances"]) if n != cursor]))
-        except:
-            network[node]["neighbours"] = ()
-            network[node]["distances"] = ()
-    return network
+PATHS = {}
 
 
 def construct_network() -> dict:
@@ -103,13 +59,79 @@ def simplify_network(network: dict) -> dict:
             next_moves = list(set(_ for _ in next_moves if _ not in visited))
             moves = next_moves
         simplified_network[node_id] = {"reward": node["reward"], "neighbours": neighbours, "distances": distances}
+    simplified_network["kill yourself"] = {"reward": 0, "neighbours": [], "distances":[]}
     return simplified_network
 
 
+network = construct_network()
+
+network = simplify_network(network)
+
+@cache
+def best_path(visited: list, cursor: str, t: int, dist: int, elephant=False):
+    """
+    Function to recursively explore all potential paths in the network
+    :param visited:
+    :param cursor:
+    :param t:
+    :param dist:
+    :return: maximum scoring path
+    """
+    global network
+
+    neighbours = network[cursor]["neighbours"]
+    distances = network[cursor]["distances"]
+
+    visited.append(cursor)
+
+    if cursor == "kill yourself":
+        return max([best_path(copy(visited), "AA", 26, 0, True)])
+
+    if not elephant:
+        neighbours += ["kill yourself"]
+        distances += [100000]
+
+    score = network[cursor]["reward"] * (t-dist)
+
+    if t <= 0 or set(network.keys()) == set(visited):
+        return score
+
+    # decrement time
+    t -= dist
+
+    t -= 1
+
+
+    # iterate through neighbours calling function on reduced network
+    score += max([best_path(copy(visited), n, t, d, elephant) for n, d in zip(neighbours, distances) if n not in visited] + [0])
+
+    return score
+
+
+def question_1():
+    """Answer to the first question of the day"""
+
+    return best_path([], "AA", 30, 0, True)
+
+
+def question_2():
+    """Answer to the second question of the day"""
+
+    return best_path([], "AA", 26, 0)
+
+
 if __name__ == '__main__':
-    network = construct_network()
 
-    network = simplify_network(network)
+    tic = time.time()
+    answer_1 = question_1()
+    print(f"Question 1 answer is: {answer_1}")
 
-    high_score = best_path(network, "AA", 30, 0)
-    print(high_score)
+
+    answer_2 = question_2()
+    print(f"Question 2 answer is: {answer_2}")
+
+    toc = time.time()
+
+    print(f"{toc-tic}s")
+
+
