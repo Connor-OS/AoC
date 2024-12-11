@@ -1,4 +1,5 @@
 import time
+from itertools import combinations
 
 file_path = "./resources/day_16.txt"
 
@@ -59,7 +60,6 @@ def simplify_network(network: dict) -> dict:
             next_moves = list(set(_ for _ in next_moves if _ not in visited))
             moves = next_moves
         simplified_network[node_id] = {"reward": node["reward"], "neighbours": neighbours, "distances": distances}
-    simplified_network["kill yourself"] = {"reward": 0, "neighbours": [], "distances":[]}
     return simplified_network
 
 
@@ -67,69 +67,64 @@ network = construct_network()
 
 network = simplify_network(network)
 
-@cache
-def best_path(visited: list, cursor: str, t: int, dist: int, elephant=False):
+
+def best_path(visited: tuple, cursor: str, t: int):
     """
     Function to recursively explore all potential paths in the network
     :param visited:
     :param cursor:
     :param t:
-    :param dist:
     :return: maximum scoring path
     """
     global network
+
+    visited = list(visited)
 
     neighbours = network[cursor]["neighbours"]
     distances = network[cursor]["distances"]
 
     visited.append(cursor)
 
-    if cursor == "kill yourself":
-        return max([best_path(copy(visited), "AA", 26, 0, True)])
-
-    if not elephant:
-        neighbours += ["kill yourself"]
-        distances += [100000]
-
-    score = network[cursor]["reward"] * (t-dist)
+    score = network[cursor]["reward"] * t
+    t -= 1
 
     if t <= 0 or set(network.keys()) == set(visited):
         return score
 
-    # decrement time
-    t -= dist
-
-    t -= 1
-
-
     # iterate through neighbours calling function on reduced network
-    score += max([best_path(copy(visited), n, t, d, elephant) for n, d in zip(neighbours, distances) if n not in visited] + [0])
+    score += max([best_path(tuple(visited), n, t-d) for n, d in zip(neighbours, distances) if n not in visited] + [0])
 
     return score
 
 
 def question_1():
     """Answer to the first question of the day"""
-
-    return best_path([], "AA", 30, 0, True)
+    return best_path((), "AA", 30)
 
 
 def question_2():
     """Answer to the second question of the day"""
+    best = 0
 
-    return best_path([], "AA", 26, 0)
-
+    for comb in combinations(set(network.keys()), int(len(network.keys())/2)):
+        path = best_path(tuple(comb), "AA", 26)
+        alt = set(network.keys()) - set(comb)
+        path += best_path(tuple(alt), "AA", 26)
+        if path > best:
+            best = path
+    return best
 
 if __name__ == '__main__':
 
     tic = time.time()
     answer_1 = question_1()
-    print(f"Question 1 answer is: {answer_1}")
+    print(f"Question 1 answer is: {answer_1}") # correct answer is 1638
+    toc = time.time()
 
+    print(f"time: {toc-tic}s")
 
     answer_2 = question_2()
-    print(f"Question 2 answer is: {answer_2}")
-
+    print(f"Question 2 answer is: {answer_2}") # 1732
     toc = time.time()
 
     print(f"{toc-tic}s")

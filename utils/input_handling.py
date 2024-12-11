@@ -5,6 +5,13 @@ def read_grid(in_file) -> dict:
     return grid
 
 
+def read_int_grid(in_file) -> dict:
+    with open(in_file) as file:
+        grid = {(int(x), int(y)): int(char) for y, row in enumerate(file)
+                for x, char in enumerate(row.strip("\n"))}
+    return grid
+
+
 def render_grid(grid):
     xmin, *_, xmax = sorted({x for x, y in grid.keys()})
     ymin, *_, ymax = sorted({y for x, y in grid.keys()})
