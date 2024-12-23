@@ -4,6 +4,7 @@ from functools import cache
 
 towels = []
 
+
 def file_lines():
     with open(in_file) as file:
         global towels
