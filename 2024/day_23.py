@@ -1,10 +1,10 @@
-TEST = True
+TEST = False
 in_file = "./resources/day_23_test.txt" if TEST else "./resources/day_23.txt"
 import graphviz
 from copy import deepcopy as copy
 from functools import cache
 
-clusters = []
+cliques = []
 graph = {}
 with open(in_file) as file:
     for line in file:
@@ -16,13 +16,10 @@ with open(in_file) as file:
         else:
             graph[node_a].append(node_b)
 
-
         if node_b not in graph:
             graph[node_b] = [node_a]
         else:
             graph[node_b].append(node_a)
-
-
 
 
 def graph_lines():
@@ -45,7 +42,6 @@ def graph_lines():
     return graph
 
 
-
 def question_1():
     """Answer to the first question of the day"""
     answer = 0
@@ -59,33 +55,34 @@ def question_1():
                     if "t" == node[0] or "t" == neighbour[0] or "t" == double_neighbour[0]:
                         answer += 1
 
-    return int(answer/6)
+    return int(answer / 6)
 
 
 def question_2():
     """Answer to the second question of the day"""
-    answer = 0
+    find_clique([], [node for node in graph], [])
 
-    # for node in graph:
-    #     print(f"{node} - {find_cluster(node, [])}")
+    best_clique = []
+    max_len = 0
+    for clique in cliques:
+        if len(clique) > max_len:
+            best_clique = clique
+            max_len = len(clique)
 
-    return max([find_cluster(node, []) for node in graph])
-
-
-def find_cluster(node, cluster):
-    neighbours = graph[node]
-
-    # check node is connected to existing cluster
-    for cl in cluster:
-        if cl == node: continue
-        if cl not in neighbours:
-            return len(cluster)
-    cluster.append(node)
-
-    return max([find_cluster(node, copy(cluster)) for node in neighbours if node not in cluster])
+    return ",".join(sorted(best_clique))
 
 
+def find_clique(clique, candidates, exclude):
+    # Based on the BronKerbosh Algorythm
+    if not candidates and not exclude:
+        cliques.append(clique)
 
+    for node in candidates:
+        find_clique(clique + [node],
+                    [n for n in graph[node] if n in candidates],
+                    [n for n in graph[node] if n in exclude])
+        candidates.remove(node)
+        exclude.append(node)
 
 
 if __name__ == '__main__':
