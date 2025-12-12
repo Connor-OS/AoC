@@ -1,6 +1,5 @@
 TEST = False
 in_file = "./resources/day_8_test.txt" if TEST else "./resources/day_8.txt"
-from collections import defaultdict
 
 from utils.input_handling import file_lines
 
